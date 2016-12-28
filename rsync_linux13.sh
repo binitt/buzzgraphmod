@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rsync -tvzr buzzgraph readme.txt linux@linux13:pjobs/buzzgraphmod/
+rsync -tvzr buzzgraph linux@linux13:pjobs/buzzgraphmod/

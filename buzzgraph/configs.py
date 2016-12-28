@@ -7,6 +7,8 @@ class Configs:
     input_ignore_header = True
     nodes_file = "data/output/nodes.csv"
     edges_file = "data/output/edges.csv"
+    topN = 100
+    wordcloud_file = "data/output/wordcloud.csv"
 
 def initialize():
     print("Loading configuration")
@@ -27,6 +29,11 @@ def initialize():
 
     Configs.edges_file = config.get('DEFAULT', 'edges_file', 
         fallback=Configs.edges_file)
+    Configs.topN = config.getint('DEFAULT', 'topN', 
+        fallback=Configs.topN)
+
+    Configs.wordcloud_file = config.get('DEFAULT', 'wordcloud_file',
+        fallback=Configs.wordcloud_file)
 
     print("All configs loaded")
 

@@ -7,6 +7,7 @@ from operator import attrgetter
 from buzzgraph.gephi_node import GephiNode
 from buzzgraph.gephi_edge import GephiEdge
 from buzzgraph.configs import Configs
+from langdetect.lang_detect_exception import LangDetectException
 
 
 class Pollution:
@@ -27,7 +28,6 @@ class Pollution:
     edgeId = 0
     nodes = {}
     edges = {}
-    topN = 100
 
     startFrom = 0
 
@@ -61,14 +61,14 @@ class Pollution:
             if (linenum % 1000 == 0): print("\rProcessing line:", 
                 linenum, end="")
             try:
-                '''
-                if (not self.is_utf8(lineb)):
-                    nonUtf8 += 1
-                    continue
-                line = lineb.decode("utf-8")
-                '''
-                if (not self.is_eng(line)):
+                # we get (isEng, isError)
+                lang = Pollution.is_eng(line)
+                if (not lang[0]):
                     noneng += 1
+                    if (lang[1]):
+                        print("Error getting lang for linenum: {0}, "
+                            "line: {1}".format(linenum, line))
+
                     continue
                 self.process_line(line)
                 valid += 1
@@ -103,11 +103,11 @@ class Pollution:
                 if (linenum % 1000 == 0): print("\rProcessing line:", 
                     linenum, end="")
                 try:
-                    if (not self.is_utf8(lineb)):
+                    if (not Pollution.is_utf8(lineb)):
                         nonUtf8 += 1
                         continue
                     line = lineb.decode("utf-8")
-                    if (not self.is_eng(line)):
+                    if (not Pollution.is_eng(line)):
                         noneng += 1
                         continue
                     self.process_line(line)
@@ -190,7 +190,7 @@ class Pollution:
         print("Before selection, nodes:{0}, edges: {1}".format(
           len(self.nodes), len(self.edges)))
         selnodes = sorted(self.nodes.values(), key=attrgetter('freq'),
-          reverse=True)[:self.topN]
+          reverse=True)[:Configs.topN]
         selnodesD = { item.id for item in selnodes }
         self.nodes = { k:v for k,v in self.nodes.items() if v.id in selnodesD }
         self.edges = { k:v for k,v in self.edges.items() if 
@@ -215,7 +215,7 @@ class Pollution:
             for se in sortededges:
                 f.write(se.get_csv())
 
-    def is_utf8(self, textb):
+    def is_utf8(textb):
         valid_utf8 = True
         try:
             textb.decode('utf-8')
@@ -223,9 +223,14 @@ class Pollution:
                 valid_utf8 = False
         return valid_utf8
 
-    def is_eng(self, text):
-        if (len(text) == 0): raise Exception("Text size: 0")
-        return(langdetect.detect(text) == "en")
+    def is_eng(text):
+        """
+        Returns tuple(isEnglish, isError)
+        """
+        try:
+            return(langdetect.detect(text) == "en", False)
+        except LangDetectException:
+            return (False, True)
 
 
 def main():
