@@ -1,6 +1,4 @@
 import sys, traceback
-import nltk
-import langdetect
 import re
 import xlrd
 from buzzgraph import *
@@ -8,7 +6,7 @@ from operator import attrgetter
 from buzzgraph.gephi_node import GephiNode
 from buzzgraph.gephi_edge import GephiEdge
 from buzzgraph.configs import Configs
-from langdetect.lang_detect_exception import LangDetectException
+from buzzgraph.utils import *
 
 
 class Pollution:
@@ -63,7 +61,7 @@ class Pollution:
                 linenum, end="")
             try:
                 # we get (isEng, isError)
-                lang = Pollution.is_eng(line)
+                lang = is_eng(line)
                 if (not lang[0]):
                     noneng += 1
                     if (lang[1]):
@@ -104,11 +102,11 @@ class Pollution:
                 if (linenum % 1000 == 0): print("\rProcessing line:", 
                     linenum, end="")
                 try:
-                    if (not Pollution.is_utf8(lineb)):
+                    if (not is_utf8(lineb)):
                         nonUtf8 += 1
                         continue
                     line = lineb.decode("utf-8")
-                    if (not Pollution.is_eng(line)):
+                    if (not is_eng(line)):
                         noneng += 1
                         continue
                     self.process_line(line)
@@ -127,13 +125,8 @@ class Pollution:
             linenum, valid, nonUtf8, noneng, errors))
 
     def process_line(self, line):
-        line = line.strip("\"' \t\n")
-        # remove urls
-        line = re.sub(r"\bhttps?:\S*", "__LINK__", line)
-        line = re.sub(r"\b@\w+", "__AT__", line)
-
-        tokens = nltk.word_tokenize(line)
-        tagged = nltk.pos_tag(tokens)
+        tokens = tokenize(line)
+        tagged = pos_tag(tokens)
 
         # filling nodes
         topics = [(item[0], self.POS[item[1]]) for item in tagged 
@@ -216,31 +209,16 @@ class Pollution:
             for se in sortededges:
                 f.write(se.get_csv())
 
-    def is_utf8(textb):
-        valid_utf8 = True
-        try:
-            textb.decode('utf-8')
-        except UnicodeDecodeError:
-                valid_utf8 = False
-        return valid_utf8
-
-    def is_eng(text):
-        """
-        Returns tuple(isEnglish, isError)
-        """
-        try:
-            return(langdetect.detect(text) == "en", False)
-        except LangDetectException:
-            return (False, True)
 
 
 def main():
     try:
-        log.info("=======Starting Pollution===========")
+        print("=======Starting Pollution===========")
         pollution = Pollution()
         pollution.process_file()
         pollution.write_node_csv()
         pollution.write_edge_csv()
+        print("\nCompleted Execution")
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         log.error("*** Top Level Exception:")

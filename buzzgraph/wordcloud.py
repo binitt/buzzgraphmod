@@ -1,6 +1,4 @@
 import sys, traceback
-import nltk
-import langdetect
 import re
 import xlrd
 from operator import attrgetter
@@ -8,6 +6,7 @@ from buzzgraph.pollution import Pollution
 from buzzgraph.configs import Configs
 from langdetect.lang_detect_exception import LangDetectException
 from buzzgraph import *
+from buzzgraph.utils import *
 
 class Word:
 
@@ -55,7 +54,7 @@ class WordCloud:
                 linenum, end="")
             try:
                 # we get (isEng, isError)
-                lang = Pollution.is_eng(line)
+                lang = is_eng(line)
                 if (not lang[0]):
                     noneng += 1
                     if (lang[1]):
@@ -94,14 +93,14 @@ class WordCloud:
                 if (linenum % 1000 == 0): print("\rProcessing line:", 
                     linenum, end="")
                 try:
-                    if (not Pollution.is_utf8(lineb)):
+                    if (not is_utf8(lineb)):
                         nonUtf8 += 1
                         continue
 
                     line = lineb.decode("utf-8")
 
                     # we get (isEng, isError)
-                    lang = Pollution.is_eng(line)
+                    lang = is_eng(line)
                     if (not lang[0]):
                         noneng += 1
                         if (lang[1]):
@@ -129,12 +128,7 @@ class WordCloud:
             linenum, valid, nonUtf8, noneng, errors))
 
     def process_line(self, line):
-        line = line.strip("\"' \t\n")
-        # remove urls
-        line = re.sub(r"\bhttps?:\S*", "__LINK__", line)
-        line = re.sub(r"\b@\w+", "__AT__", line)
-
-        tokens = nltk.word_tokenize(line)
+        tokens = tokenize(line)
         lineset = set()
         for token in tokens:
             word = Word(token)
@@ -160,10 +154,11 @@ class WordCloud:
 
 def main():
     try:
-        log.info("=======Starting WordCloud===========")
+        print("=======Starting WordCloud===========")
         cloud = WordCloud()
         cloud.process_file()
         cloud.write_csv()
+        print("\nCompleted Execution")
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         log.error("*** Top Level Exception:")
