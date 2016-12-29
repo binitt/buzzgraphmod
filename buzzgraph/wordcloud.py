@@ -7,8 +7,10 @@ from operator import attrgetter
 from buzzgraph.pollution import Pollution
 from buzzgraph.configs import Configs
 from langdetect.lang_detect_exception import LangDetectException
+from buzzgraph import *
 
 class Word:
+
     word = ""
     freq = 1
 
@@ -34,7 +36,7 @@ class WordCloud:
             self.process_file_excel()
 
     def process_file_excel(self):
-        print("Processing excel file:", Configs.input_file)
+        log.info("Processing excel file: %s", Configs.input_file)
 
         linenum = 0
         nonUtf8 = 0
@@ -57,28 +59,28 @@ class WordCloud:
                 if (not lang[0]):
                     noneng += 1
                     if (lang[1]):
-                        print("Error getting lang for linenum: {0}, "
+                        log.info("Error getting lang for linenum: {0}, "
                             "line: {1}".format(linenum, line))
 
                     continue
                 self.process_line(line)
                 valid += 1
             except:
-                print("While processing linenum: {0}".format(
+                log.error("While processing linenum: {0}".format(
                   linenum))
                 errors += 1
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                print("*** Got Exception:", file=sys.stderr)
-                print(traceback.format_exc(), file=sys.stderr)
+                log.error("*** Got Exception:")
+                log.error(traceback.format_exc())
         
         self.select_top_n()
-        print("Processed lines: {0}, valid: {1}, "
+        log.info("Processed lines: {0}, valid: {1}, "
             "non-utf8: {2}, non-english: {3}, errors: {4}".format(
             linenum, valid, nonUtf8, noneng, errors))
 
 
     def process_file_csv(self):
-        print("Processing csv file:", Configs.input_file)
+        log.info("Processing csv file: %s", Configs.input_file)
         linenum = 0
         nonUtf8 = 0
         valid = 0
@@ -103,8 +105,9 @@ class WordCloud:
                     if (not lang[0]):
                         noneng += 1
                         if (lang[1]):
-                            print("Error getting lang for linenum: {0}, "
-                                "line: {1}".format(linenum, line))
+                            log.info(
+                                "Error getting lang for linenum: {0}, "
+                                " line: {1}".format(linenum, line))
     
                         continue
 
@@ -112,15 +115,16 @@ class WordCloud:
                     self.process_line(line)
                     valid += 1
                 except:
-                    print("While processing linenum: {0}, line: {1}".format(
+                    log.info("While processing linenum: {0}, "
+                      "line: {1}".format(
                       linenum, line))
                     errors += 1
                     exc_type, exc_value, exc_traceback = sys.exc_info()
-                    print("*** Got Exception:", file=sys.stderr)
-                    print(traceback.format_exc(), file=sys.stderr)
+                    log.error("*** Got Exception:")
+                    log.error(traceback.format_exc())
 
         self.select_top_n()
-        print("Processed lines: {0}, valid: {1}, "
+        log.info("Processed lines: {0}, valid: {1}, "
             "non-utf8: {2}, non-english: {3}, errors: {4}".format(
             linenum, valid, nonUtf8, noneng, errors))
 
@@ -148,7 +152,7 @@ class WordCloud:
           reverse=True)[:Configs.topN]
 
     def write_csv(self):
-        print("Writing nodes to", Configs.wordcloud_file)
+        log.info("Writing nodes to %s", Configs.wordcloud_file)
         with open(Configs.wordcloud_file, "w", encoding='utf8') as f:
             f.write(Word.HEADER + "\n")
             for w in self.words:
@@ -156,10 +160,11 @@ class WordCloud:
 
 def main():
     try:
+        log.info("=======Starting WordCloud===========")
         cloud = WordCloud()
         cloud.process_file()
         cloud.write_csv()
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        print("*** Top Level Exception:", file=sys.stderr)
-        print(traceback.format_exc(), file=sys.stderr)
+        log.error("*** Top Level Exception:")
+        log.error(traceback.format_exc())

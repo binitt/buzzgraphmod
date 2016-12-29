@@ -3,6 +3,7 @@ import nltk
 import langdetect
 import re
 import xlrd
+from buzzgraph import *
 from operator import attrgetter
 from buzzgraph.gephi_node import GephiNode
 from buzzgraph.gephi_edge import GephiEdge
@@ -43,7 +44,7 @@ class Pollution:
 
 
     def process_file_excel(self):
-        print("Processing excel file:", Configs.input_file)
+        log.info("Processing excel file: %s", Configs.input_file)
 
         linenum = 0
         nonUtf8 = 0
@@ -66,29 +67,29 @@ class Pollution:
                 if (not lang[0]):
                     noneng += 1
                     if (lang[1]):
-                        print("Error getting lang for linenum: {0}, "
+                        log.warning("Error getting lang for linenum: {0}, "
                             "line: {1}".format(linenum, line))
 
                     continue
                 self.process_line(line)
                 valid += 1
             except:
-                print("While processing linenum: {0}, line: {1}".format(
+                log.error("While processing linenum: {0}, line: {1}".format(
                   linenum, line))
                 errors += 1
                 exc_type, exc_value, exc_traceback = sys.exc_info()
-                print("*** Got Exception:", file=sys.stderr)
-                print(traceback.format_exc(), file=sys.stderr)
+                log.error("*** Got Exception:")
+                log.error(traceback.format_exc())
         
         self.select_top_n()
-        print("Processed lines: {0}, valid: {1}, "
+        log.info("Processed lines: {0}, valid: {1}, "
             "non-utf8: {2}, non-english: {3}, errors: {4}".format(
             linenum, valid, nonUtf8, noneng, errors))
 
 
 
     def process_file_csv(self):
-        print("Processing csv file:", Configs.input_file)
+        log.info("Processing csv file: %s", Configs.input_file)
         linenum = 0
         nonUtf8 = 0
         valid = 0
@@ -113,15 +114,15 @@ class Pollution:
                     self.process_line(line)
                     valid += 1
                 except:
-                    print("While processing linenum: {0}, line: {1}".format(
+                    log.error("While processing linenum: {0}, line: {1}".format(
                       linenum, line))
                     errors += 1
                     exc_type, exc_value, exc_traceback = sys.exc_info()
-                    print("*** Got Exception:", file=sys.stderr)
-                    print(traceback.format_exc(), file=sys.stderr)
+                    log.error("*** Got Exception:")
+                    log.error(traceback.format_exc())
 
         self.select_top_n()
-        print("Processed lines: {0}, valid: {1}, "
+        log.info("Processed lines: {0}, valid: {1}, "
             "non-utf8: {2}, non-english: {3}, errors: {4}".format(
             linenum, valid, nonUtf8, noneng, errors))
 
@@ -187,7 +188,7 @@ class Pollution:
 
 
     def select_top_n(self):
-        print("Before selection, nodes:{0}, edges: {1}".format(
+        log.info("Before selection, nodes:{0}, edges: {1}".format(
           len(self.nodes), len(self.edges)))
         selnodes = sorted(self.nodes.values(), key=attrgetter('freq'),
           reverse=True)[:Configs.topN]
@@ -195,11 +196,11 @@ class Pollution:
         self.nodes = { k:v for k,v in self.nodes.items() if v.id in selnodesD }
         self.edges = { k:v for k,v in self.edges.items() if 
           (v.source in selnodesD) and (v.target in selnodesD) }
-        print("After selection, nodes:{0}, edges: {1}".format(
+        log.info("After selection, nodes:{0}, edges: {1}".format(
           len(self.nodes), len(self.edges)))
 
     def write_node_csv(self):
-        print("Writing nodes to", Configs.nodes_file)
+        log.info("Writing nodes to %s", Configs.nodes_file)
         sortednodes = sorted(self.nodes.values(), key=attrgetter('id'))
         with open(Configs.nodes_file, "w", encoding='utf8') as f:
             f.write(GephiNode.HEADER)
@@ -208,7 +209,7 @@ class Pollution:
                 
 
     def write_edge_csv(self):
-        print("Writing edges to", Configs.edges_file)
+        log.info("Writing edges to %s", Configs.edges_file)
         sortededges = sorted(self.edges.values(), key=attrgetter('id'))
         with open(Configs.edges_file, "w", encoding='utf8') as f:
             f.write(GephiEdge.HEADER)
@@ -235,12 +236,12 @@ class Pollution:
 
 def main():
     try:
+        log.info("=======Starting Pollution===========")
         pollution = Pollution()
         pollution.process_file()
         pollution.write_node_csv()
         pollution.write_edge_csv()
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        print("*** Top Level Exception:", file=sys.stderr)
-#        traceback.print_exc()
-        print(traceback.format_exc(), file=sys.stderr)
+        log.error("*** Top Level Exception:")
+        log.error(traceback.format_exc())

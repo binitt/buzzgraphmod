@@ -1,4 +1,5 @@
 import configparser
+from buzzgraph import *
 
 class Configs:
     input_file = "data/pollution.xlsx"
@@ -11,9 +12,10 @@ class Configs:
     wordcloud_file = "data/output/wordcloud.csv"
 
 def initialize():
-    print("Loading configuration")
+    config_file = "resources/config.cfg"
+    log.info("Loading configuration: %s", config_file)
     config = configparser.RawConfigParser()
-    config.read('resources/config.cfg')
+    config.read(config_file)
 
     Configs.input_file = config.get('DEFAULT', 'input_file', 
         fallback=Configs.input_file)
@@ -34,8 +36,6 @@ def initialize():
 
     Configs.wordcloud_file = config.get('DEFAULT', 'wordcloud_file',
         fallback=Configs.wordcloud_file)
-
-    print("All configs loaded")
 
 
 initialize()
