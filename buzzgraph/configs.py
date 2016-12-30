@@ -10,6 +10,7 @@ class Configs:
     edges_file = "data/output/edges.csv"
     topN = 100
     wordcloud_file = "data/output/wordcloud.csv"
+    keywords_csv = "data/keywords.csv"
 
 def initialize():
     config_file = "resources/config.cfg"
@@ -36,6 +37,7 @@ def initialize():
 
     Configs.wordcloud_file = config.get('DEFAULT', 'wordcloud_file',
         fallback=Configs.wordcloud_file)
-
+    Configs.keywords_csv = config.get('DEFAULT', 'keywords_csv',
+        fallback=Configs.keywords_csv)
 
 initialize()

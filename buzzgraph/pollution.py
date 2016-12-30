@@ -27,6 +27,7 @@ class Pollution:
     edgeId = 0
     nodes = {}
     edges = {}
+    keywords = set()
 
     startFrom = 0
 
@@ -34,12 +35,27 @@ class Pollution:
         pass
 
     def process_file(self):
+        """Build set of keywords"""
+        self.load_keywords()
         if (Configs.input_ignore_header): self.startFrom = 1
         if (re.compile(r'(?i).xlsx?$').search(Configs.input_file) == None):
             self.process_file_csv()
         else:
             self.process_file_excel()
 
+    def load_keywords(self):
+        log.info("Processing keywords file: %s", Configs.keywords_csv)
+        linenum = 0
+        with open(Configs.keywords_csv, "rb") as f:
+            for lineb in f:
+                linenum += 1
+                if (linenum == 1): continue
+                line = lineb.decode("utf-8")
+                word = line.split(",")[0]
+                kw = GephiNode.gen_key(word)
+                self.keywords.add(kw)
+        log.info("Loaded %d keywords", len(self.keywords))
+        
 
     def process_file_excel(self):
         log.info("Processing excel file: %s", Configs.input_file)
@@ -155,6 +171,11 @@ class Pollution:
             nto = narr[i]
             if (nfrom.id == nto.id):
                 continue
+            """Ignore this edge if none of the words are in keywords"""
+            if (not nto.label in self.keywords  and 
+                not nfrom.label in self.keywords):
+                continue;
+
             edge = GephiEdge(nfrom.id, nto.id, self.edgeId)
             if (edge.key in self.edges):
                 edge = self.edges[edge.key]

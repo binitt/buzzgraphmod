@@ -14,11 +14,12 @@ class GephiNode:
         self.modularity_class = modularity_class
         self.id = id
          
-        self.key = label.lower()
+        self.key = GephiNode.gen_key(label)
 
     def get_csv(self):
         return("%d,%s,%s,%d,%d\n"%(self.id, self.label, 
           self.timeset, self.modularity_class, self.freq))
 
 
-
+    def gen_key(label):
+        return label.lower()
