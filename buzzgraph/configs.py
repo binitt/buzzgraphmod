@@ -10,7 +10,7 @@ class Configs:
     edges_file = "data/output/edges.csv"
     topN = 100
     wordcloud_file = "data/output/wordcloud.csv"
-    keywords_csv = "data/keywords.csv"
+    keywords_csv = None
 
 def initialize():
     config_file = "resources/config.cfg"

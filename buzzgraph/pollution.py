@@ -44,6 +44,11 @@ class Pollution:
             self.process_file_excel()
 
     def load_keywords(self):
+        if (Configs.keywords_csv == None):
+            log.info("Keywords file not found, disabling feature")
+            self.keywords = None
+            return;
+
         log.info("Processing keywords file: %s", Configs.keywords_csv)
         linenum = 0
         with open(Configs.keywords_csv, "rb") as f:
@@ -167,7 +172,8 @@ class Pollution:
 
     def fill_edges_nearby(self, narr):
         # Ignore if keyword is not present in line
-        if not any (item for item in narr if item.label in self.keywords):
+        if self.keywords != None and (
+            not any (item for item in narr if item.label in self.keywords)):
             return;
         for i in range(1, len(narr)):
             nfrom = narr[i-1]
