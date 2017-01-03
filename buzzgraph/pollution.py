@@ -15,7 +15,7 @@ class Pollution:
     # select topic words POS
     POS = { 
       "NNP":1, "NNS":2, "NNPS":3, "NN":4, 
-      "VB":5, "VBD":6, "VBG":7, "VBN":8, "VBP":9, "VBZ":10,
+      #"VB":5, "VBD":6, "VBG":7, "VBN":8, "VBP":9, "VBZ":10,
       "JJ":11, "JJR":12, "JJS":13, 
       #"CD":14 
     }
@@ -166,15 +166,19 @@ class Pollution:
 
 
     def fill_edges_nearby(self, narr):
+        # Ignore if keyword is not present in line
+        if not any (item for item in narr if item.label in self.keywords):
+            return;
         for i in range(1, len(narr)):
             nfrom = narr[i-1]
             nto = narr[i]
             if (nfrom.id == nto.id):
                 continue
-            """Ignore this edge if none of the words are in keywords"""
+            """Ignore this edge if none of the words are in keywords
             if (not nto.label in self.keywords  and 
                 not nfrom.label in self.keywords):
                 continue;
+            """
 
             edge = GephiEdge(nfrom.id, nto.id, self.edgeId)
             if (edge.key in self.edges):
@@ -207,9 +211,14 @@ class Pollution:
         selnodes = sorted(self.nodes.values(), key=attrgetter('freq'),
           reverse=True)[:Configs.topN]
         selnodesD = { item.id for item in selnodes }
-        self.nodes = { k:v for k,v in self.nodes.items() if v.id in selnodesD }
         self.edges = { k:v for k,v in self.edges.items() if 
           (v.source in selnodesD) and (v.target in selnodesD) }
+        # regenerate selnodesD again to filter out disconnected nodes
+        selnodesD = set()
+        for k,v in self.edges.items():
+            selnodesD.add(v.source)
+            selnodesD.add(v.target)
+        self.nodes = { k:v for k,v in self.nodes.items() if v.id in selnodesD }
         log.info("After selection, nodes:{0}, edges: {1}".format(
           len(self.nodes), len(self.edges)))
 
